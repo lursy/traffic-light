@@ -12,21 +12,26 @@ int main(){
     Queue semaforo = Queue<Veiculo>(3);
 
     Veiculo moto2 = *moto;
-    semaforo.enqueue(moto);
-    semaforo.enqueue(&moto2);
+    semaforo.enqueue(*moto);
+    semaforo.enqueue(moto2);
     
     printf("ADDRESS: [%p] - [%p]\n", moto, &moto2);
 
     
-    // semaforo.enqueue(carro);
-    // semaforo.enqueue(caminhao);
+    // semaforo.enqueue(*carro);
+    // semaforo.enqueue(*caminhao);
     // semaforo.dequeue();
-    // semaforo.enqueue(moto);
+    // semaforo.enqueue(*moto);
     // std::cin.getline(code, 50);
     // Veiculo carro = Veiculo(code, TipoVeiculo::B);
 
     // printf("%s, %ld\n", carro.getPlaca().getCode(), sizeof(*code));
 
     // delete[] code;
+
+    // A fila guarda copias: os originais alocados aqui continuam sendo nossos.
+    delete carro;
+    delete moto;
+    delete caminhao;
     return 0;
 }

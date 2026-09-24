@@ -15,9 +15,11 @@ class Queue {
         Queue(int size);
         ~Queue();
 
-        void enqueue(T* obj);
-        T* dequeue();
-        T* next();
+        Queue<T>& operator=(const Queue<T>& other);
+
+        void enqueue(const T& obj);
+        T dequeue();
+        T& next();
 };
 
 #endif
