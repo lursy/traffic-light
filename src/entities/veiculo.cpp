@@ -1,20 +1,19 @@
-#include <stdio.h>
-
 #include "entities/veiculo.h"
-#include "vo/placa.vo.h"
 
+const char* tipoVeiculoToString(TipoVeiculo tipo){
+    switch(tipo){
+        case TipoVeiculo::MOTO:     return "Moto";
+        case TipoVeiculo::CARRO:    return "Carro";
+        case TipoVeiculo::CAMINHAO: return "Caminhão";
+        case TipoVeiculo::ONIBUS:   return "Ônibus";
+    }
 
-Veiculo::Veiculo(const char* code, TipoVeiculo tipo){
-    this->placa_ = new Placa();
-    this->placa_->setCode(code);
-    this->tipo_ = tipo;
+    return "Desconhecido";
 }
 
-Veiculo::Veiculo(const Veiculo & other){
-    this->tipo_ = other.tipo_;
-    this->placa_ = new Placa();
-    this->placa_->setCode(other.placa_->getCode());
-}
+Veiculo::Veiculo(const Placa& placa, TipoVeiculo tipo, int ordemChegada)
+    : placa_(placa), tipo_(tipo), ordemChegada_(ordemChegada) {}
 
-Placa* Veiculo::getPlaca(){ return this->placa_; }
-TipoVeiculo Veiculo::getTipo(){ return this->tipo_; }
+const Placa& Veiculo::getPlaca() const { return this->placa_; }
+TipoVeiculo Veiculo::getTipo() const { return this->tipo_; }
+int Veiculo::getOrdemChegada() const { return this->ordemChegada_; }

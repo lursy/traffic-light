@@ -1,37 +1,14 @@
-#include <iostream>
-#include <stdio.h>
+#include "services/semaforo.h"
+#include "ui/menu.h"
 
-#include "entities/veiculo.h"
-#include "utils/queue.h"
-
+// Simulação de semáforo de uma via com fila dinâmica (FIFO).
+// A memória dos veículos restantes é liberada automaticamente pelo destrutor
+// da fila quando `semaforo` sai de escopo.
 int main(){
-    char* code = new char[50];
-    Veiculo* carro = new Veiculo("test-12", TipoVeiculo::B);
-    Veiculo* moto = new Veiculo("test-23", TipoVeiculo::A);
-    Veiculo* caminhao = new Veiculo("test-45", TipoVeiculo::C);
-    Queue semaforo = Queue<Veiculo>(3);
+    Semaforo semaforo;
+    Menu menu(semaforo);
 
-    Veiculo moto2 = *moto;
-    semaforo.enqueue(*moto);
-    semaforo.enqueue(moto2);
-    
-    printf("ADDRESS: [%p] - [%p]\n", moto, &moto2);
+    menu.executar();
 
-    
-    // semaforo.enqueue(*carro);
-    // semaforo.enqueue(*caminhao);
-    // semaforo.dequeue();
-    // semaforo.enqueue(*moto);
-    // std::cin.getline(code, 50);
-    // Veiculo carro = Veiculo(code, TipoVeiculo::B);
-
-    // printf("%s, %ld\n", carro.getPlaca().getCode(), sizeof(*code));
-
-    // delete[] code;
-
-    // A fila guarda copias: os originais alocados aqui continuam sendo nossos.
-    delete carro;
-    delete moto;
-    delete caminhao;
     return 0;
 }
