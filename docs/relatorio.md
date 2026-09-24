@@ -11,39 +11,30 @@
 
 ## 1. Descrição da solução
 
-O programa simula um semáforo em uma via única. Os carros que chegam entram no fim de uma fila e, quando o sinal abre, o usuário diz quantos podem passar. Eles saem sempre pela frente da fila, então quem chegou primeiro passa primeiro (FIFO).
+O programa simula um semáforo em uma via única. Os veículos que chegam entram no fim de uma fila e, quando o sinal abre, o usuário informa quantos podem passar. Eles saem sempre pelo início da fila, respeitando a política FIFO.
 
-Para isso implementei uma **fila dinâmica encadeada** do zero, sem usar nada pronto da STL. Dividi o código em algumas classes, cada uma com uma função:
+Implementei uma **fila dinâmica encadeada** do zero, sem estruturas prontas da STL. O código está dividido em classes:
 
-| Classe | Arquivos | O que faz |
-|---|---|---|
-| `Queue` | `utils/queue.h` e `.cpp` | A fila em si: nós ligados por ponteiros |
-| `Placa` | `vo/placa.vo.h` e `.cpp` | Guarda a placa e confere se ela é válida (`ABC1234` ou `ABC1D23`) |
-| `Veiculo` | `entities/veiculo.h` e `.cpp` | Placa, tipo (moto, carro, caminhão, ônibus) e ordem de chegada |
-| `Semaforo` | `services/semaforo.h` e `.cpp` | Tem a fila e o contador da ordem de chegada |
-| `Menu` | `ui/menu.h` e `.cpp` | Mostra o menu, lê o teclado e imprime os resultados |
+| Classe | O que faz |
+|---|---|
+| `Queue` | A fila: nós ligados por ponteiros |
+| `Placa` | Guarda a placa e valida o formato (`ABC1234` ou `ABC1D23`) |
+| `Veiculo` | Placa, tipo (moto, carro, caminhão, ônibus) e ordem de chegada |
+| `Semaforo` | Contém a fila e gera a ordem de chegada |
+| `Menu` | Menu textual: lê o teclado e mostra os resultados |
 
-O menu tem as opções pedidas no enunciado: registrar chegada, consultar o primeiro, abrir o sinal, listar a fila e mostrar a quantidade. Quando o usuário digita algo inválido (uma letra no lugar de um número, uma placa errada ou uma quantidade negativa), o programa avisa e volta para o menu, sem travar.
-
-Algumas decisões que tomei:
-
-- **A fila guarda um ponteiro para o início e outro para o fim.** Assim, colocar um carro no fim não exige percorrer a fila inteira.
-- **A fila tem um contador de quantidade** que é atualizado a cada entrada e saída, então não é preciso contar os nós toda vez.
-- **A ordem de chegada é gerada pelo próprio sistema.** Um contador no `Semaforo` começa em 1 e só aumenta quando o carro realmente entra na fila.
-- **A fila guarda uma cópia do veículo.** Assim, nada que aconteça com o objeto original afeta o que está na fila.
+O menu oferece: registrar chegada, consultar o primeiro, abrir o sinal, listar os veículos aguardando e mostrar a quantidade. Entradas inválidas e operações sobre a fila vazia geram uma mensagem, e o programa volta ao menu.
 
 ## 2. Representação da estrutura
 
-Cada carro fica dentro de um **nó**, que guarda os dados do veículo e um ponteiro para o próximo nó. A fila guarda o endereço do primeiro nó (`head_`), o do último (`tail_`) e a quantidade de nós.
+Cada veículo fica em um **nó** com os dados e um ponteiro para o próximo. A fila guarda um ponteiro para o primeiro nó (`head_`), um para o último (`tail_`) e a quantidade de nós (`length_`).
 
 ```cpp
 struct Node {
-    Veiculo value;   // dados do carro
-    Node* next;      // próximo da fila
+    Veiculo value;
+    Node* next;
 };
 ```
-
-Uma fila com três carros fica assim:
 
 ```
  head_                               tail_
@@ -51,95 +42,115 @@ Uma fila com três carros fica assim:
  [#1 ABC1234] → [#2 BRA2E19] → [#3 XYZ9876] → nullptr
 ```
 
-**Quando um carro chega (`enqueue`):** o programa cria um nó novo com `new`, liga o último nó a ele e ele passa a ser o `tail_`. Se a fila estava vazia, ele também vira o `head_`.
-
-```
- [#1] → [#2] → [#3] → [#4 novo] → nullptr
-```
-
-**Quando o sinal abre (`dequeue`):** o programa guarda o primeiro nó, avança o `head_` para o segundo e apaga o primeiro com `delete`. Se era o último carro, o `tail_` também volta a ser `nullptr`.
-
-```
- [#2] → [#3] → [#4] → nullptr
-```
-
-Todo nó criado com `new` é apagado com `delete`, seja quando o carro sai da fila, seja no fim do programa, quando o destrutor da fila apaga os que sobraram.
+- **Chegada (`enqueue`):** cria um nó com `new`, liga o último nó a ele e atualiza o `tail_`. Se a fila estava vazia, o nó também vira o `head_`.
+- **Saída (`dequeue`):** avança o `head_` para o segundo nó e apaga o primeiro com `delete`. Se a fila ficou vazia, o `tail_` volta a ser `nullptr`.
+- **Fim do programa:** o destrutor da fila apaga com `delete` os nós que ainda restarem.
 
 ## 3. Testes executados
 
-Fiz os testes manualmente pelo menu, na sequência abaixo, começando com a fila vazia.
+Testes feitos pelo menu, nesta sequência, começando com a fila vazia.
 
-| # | Teste | O que fiz | Resultado esperado | Obtido |
+| # | Teste | Entrada | Resultado obtido | Status |
 |---|---|---|---|---|
-| 1 | Abrir o sinal com a fila vazia | Opção 3 logo ao iniciar | "não há veículos para liberar" | ☐ |
-| 2 | Registrar vários veículos e conferir a ordem | Registrei `ABC1234`, `BRA2E19`, `XYZ9876`, `DEF5678` e usei a opção 4 | Lista na ordem #1, #2, #3, #4 | ☐ |
-| 3 | Consultar o primeiro sem alterar a fila | Opção 2 duas vezes, depois opção 5 | As duas vezes mostra `ABC1234`, e a quantidade continua 4 | ☐ |
-| 4 | Liberar menos veículos do que existem | Opção 3 com quantidade `2` | Saem #1 e #2, e sobram 2 na fila | ☐ |
-| 5 | Tentar liberar mais veículos do que existem | Opção 3 com quantidade `5` | Saem #3 e #4, e aparece o aviso de que não há mais veículos | ☐ |
-| 6 | Entradas inválidas | Opção `9`; placa `AB12345`; registrei um carro e abri o sinal com quantidade `-1` | Mensagem de erro em cada caso e volta ao menu | ☐ |
-
-_(Colar aqui os prints ou a saída do terminal de cada teste.)_
+| 1 | Abrir o sinal com a fila vazia | Opção 3 | `Sinal aberto, mas não há veículos para liberar.` | ✅ |
+| 2 | Registrar vários veículos e conferir a ordem | `ABC1234` (carro), `BRA2E19` (moto), `XYZ9876` (caminhão), `DEF5678` (ônibus); depois opção 4 | Ordens #1 a #4 geradas, e a listagem mostra os veículos na ordem de chegada | ✅ |
+| 3 | Consultar o primeiro sem alterar a fila | Opção 2 duas vezes, depois opção 5 | As duas vezes: `#1 ABC1234 (Carro)`, e depois `Veículos na fila: 4` | ✅ |
+| 4 | Liberar menos veículos do que existem | Opção 3, quantidade `2` | Liberados #1 e #2, `2 veículo(s) aguardando` | ✅ |
+| 5 | Liberar mais veículos do que existem | Opção 3, quantidade `5` | Liberados #3 e #4, com o aviso `Foram solicitados 5, mas só havia 2 veículo(s) na fila. Não há mais veículos para liberar.` | ✅ |
+| 6 | Entradas inválidas | Opção `9`; placa `AB12345`; quantidade `-1` | `Opção inválida`, `Placa inválida` e `Quantidade inválida`, sempre voltando ao menu | ✅ |
 
 ## 4. Análise de complexidade
 
-Nas contas abaixo, **n** é o número de carros na fila e **k** é quantos carros o usuário pediu para passar.
+**n** = número de veículos na fila; **k** = quantidade de veículos pedida ao abrir o sinal.
 
-**Registrar chegada (`enqueue`).** A operação fundamental é criar o nó e ligar os ponteiros. Como a fila tem o ponteiro `tail_`, o programa vai direto ao fim. O código só tem um `if` (fila vazia ou não), sem nenhum laço, então o custo é o mesmo com 1 ou com 1000 carros: **O(1)** em todos os casos.
+### Inserir (`enqueue`)
 
-**Liberar um carro (`dequeue`) e consultar o primeiro (`front`).** As duas mexem só no primeiro nó, que o `head_` já aponta. Só há `if`s simples, sem laço: **O(1)** em todos os casos.
-
-**Quantidade (`size`).** Só devolve o contador: **O(1)**.
-
-**Abrir o sinal (`abrirSinal`).** A operação fundamental é o `dequeue` dentro do laço:
+- **Operação fundamental:** criação do nó e ligação dos ponteiros.
+- **Casos:** o `tail_` dá acesso direto ao fim, então o custo é o mesmo para qualquer tamanho de fila. Melhor, médio e pior caso: **O(1)**.
 
 ```cpp
-while(liberados < quantidade && !this->fila_.isEmpty()){   // roda min(k, n) vezes
+Node* node = new Node(obj);        // O(1)
+if(this->tail_ == nullptr){        // condição: O(1)
+    this->head_ = node;
+} else {
+    this->tail_->next = node;
+}
+this->tail_ = node;                // O(1)
+this->length_++;                   // O(1)
+```
+
+### Remover (`dequeue`) e consultar o primeiro (`front`)
+
+- **Operação fundamental:** acesso ao nó do início (`head_`).
+- **Casos:** sempre atuam sobre o primeiro nó, e só há condições simples, sem repetição. Melhor, médio e pior caso: **O(1)**.
+
+```cpp
+if(this->head_ == nullptr){ ... }   // condição: O(1)
+Node* node = this->head_;
+this->head_ = node->next;
+if(this->head_ == nullptr){         // condição: O(1)
+    this->tail_ = nullptr;
+}
+delete node;                        // O(1)
+```
+
+### Quantidade (`size`)
+
+- **Operação fundamental:** leitura do contador `length_`, atualizado a cada inserção e remoção.
+- **Casos:** melhor, médio e pior caso: **O(1)**.
+
+### Abrir o sinal (`abrirSinal`)
+
+- **Operação fundamental:** `dequeue` dentro do laço.
+- **Casos:** o laço para quando saem k veículos ou quando a fila esvazia.
+  - **Melhor caso:** k = 1, **O(1)**.
+  - **Caso médio:** k < n, **O(k)**.
+  - **Pior caso:** k ≥ n, a fila inteira é liberada, **O(n)**.
+
+```cpp
+if(quantidade <= 0){ ... }                                 // condição: O(1)
+while(liberados < quantidade && !this->fila_.isEmpty()){   // repetição: min(k, n) vezes
     aoLiberar(this->fila_.dequeue());                      // O(1)
     liberados++;
 }
 ```
 
-O laço para quando saem k carros ou quando a fila acaba, o que acontecer primeiro.
-- **Melhor caso:** k = 1, só um carro sai: **O(1)**.
-- **Caso médio:** saem alguns carros: **O(k)**.
-- **Pior caso:** k é maior ou igual ao tamanho da fila e todos saem: **O(n)**.
+### Listar a fila (`forEach`)
 
-**Listar a fila (`forEach`).** Para mostrar todos os carros, o laço precisa passar por cada nó:
+- **Operação fundamental:** visita de um nó.
+- **Casos:** é preciso passar por todos os nós. Melhor, médio e pior caso: **O(n)**.
 
 ```cpp
-for(Node* node = this->head_; node != nullptr; node = node->next){   // n vezes
+for(Node* node = this->head_; node != nullptr; node = node->next){   // repetição: n vezes
     visit(node->value, position++);                                  // O(1)
 }
 ```
 
-É **O(n)** em todos os casos, porque sempre percorre a fila inteira.
+### Esvaziar a fila (`clear`, usado pelo destrutor)
 
-**Apagar a fila (`clear`, chamado pelo destrutor).** Também é um laço com um `delete` por nó: **O(n)**.
+- **Operação fundamental:** `delete` de um nó.
+- **Casos:** apaga todos os nós. Melhor, médio e pior caso: **O(n)**.
+
+```cpp
+while(this->head_ != nullptr){      // repetição: n vezes
+    Node* node = this->head_;
+    this->head_ = node->next;
+    delete node;                    // O(1)
+}
+```
+
+### Resumo
 
 | Operação | Melhor caso | Caso médio | Pior caso | Justificativa |
 |---|---|---|---|---|
-| Registrar chegada | O(1) | O(1) | O(1) | Vai direto ao fim pelo `tail_`, sem laço |
-| Consultar primeiro | O(1) | O(1) | O(1) | Acessa direto o `head_` |
-| Liberar um carro | O(1) | O(1) | O(1) | Remove sempre o primeiro nó |
-| Quantidade | O(1) | O(1) | O(1) | Contador atualizado a cada entrada/saída |
-| Abrir sinal (k carros) | O(1) | O(k) | O(n) | Laço roda até k vezes ou até a fila esvaziar |
-| Listar a fila | O(n) | O(n) | O(n) | Laço passa por todos os nós |
-| Apagar a fila | O(n) | O(n) | O(n) | Um `delete` por nó |
+| Inserir (`enqueue`) | O(1) | O(1) | O(1) | Acesso direto ao fim pelo `tail_`, sem laço |
+| Remover (`dequeue`) | O(1) | O(1) | O(1) | Remove sempre o primeiro nó, sem laço |
+| Consultar primeiro (`front`) | O(1) | O(1) | O(1) | Acesso direto ao `head_` |
+| Quantidade (`size`) | O(1) | O(1) | O(1) | Contador mantido a cada inserção/remoção |
+| Abrir sinal | O(1) | O(k) | O(n) | Laço executa min(k, n) vezes |
+| Listar a fila (`forEach`) | O(n) | O(n) | O(n) | Laço percorre todos os nós |
+| Esvaziar a fila (`clear`) | O(n) | O(n) | O(n) | Um `delete` por nó |
 
-**Complexidade final:** as operações principais da fila (inserir, remover e consultar) são **O(1)**. As mais caras do programa são listar a fila e liberar todos os carros de uma vez, que são **O(n)**. A memória usada também cresce com n, porque é um nó por carro esperando.
+### Complexidade final
 
-## 5. Como compilar e executar
-
-```bash
-make run
-```
-
-Ou, sem `make`:
-
-```bash
-g++ -std=c++20 -Iinclude src/utils/queue.cpp src/vo/placa.cpp src/entities/veiculo.cpp \
-    src/services/semaforo.cpp src/ui/menu.cpp main.cpp -o app
-./app
-```
-
-Também deixei o `Dockerfile` (entrega opcional): `docker compose run --rm app`.
+As operações básicas da fila (inserir, remover, consultar e quantidade) são **O(1)**. As operações mais custosas do programa são listar a fila e liberar todos os veículos, ambas **O(n)**. Portanto, a complexidade final do programa por operação é **O(n)**. A memória utilizada também é **O(n)**, com um nó por veículo aguardando.
