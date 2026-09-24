@@ -4,6 +4,7 @@
 !src/
 !include/
 !main.cpp
+!Makefile
 
 # Garante que lixo de build local nunca entre no contexto
 **/*.o
@@ -11,3 +12,4 @@
 **/*.gch
 **/application
 **/app
+**/build/

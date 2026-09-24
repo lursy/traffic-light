@@ -1,7 +1,7 @@
 # queue-traffic
 #
 #   docker compose run --rm app                  -> executa o binário final
-#   docker compose --profile dev run --rm dev    -> shell com gcc/gdb/valgrind
+#   docker compose --profile dev run --rm dev    -> shell com gcc/gdb/valgrind (compile com `make`)
 #   docker compose build                         -> só builda
 
 services:

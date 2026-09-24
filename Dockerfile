@@ -35,25 +35,18 @@ FROM toolchain AS builder
 
 # Flags exportadas como ARG para permitir override:
 #   docker build --build-arg CXXFLAGS="-std=c++20 -O0 -g -fsanitize=address" .
-ARG CXXFLAGS="-std=c++20 -O2 -pipe -DNDEBUG -Wall -Wextra -Iinclude"
+ARG CXXFLAGS="-std=c++20 -O2 -pipe -DNDEBUG -Wall -Wextra"
 ARG LDFLAGS="-static -s"
 
-# Headers primeiro: mudar só um .cpp não invalida esta camada.
+COPY Makefile .
 COPY include/ ./include/
 COPY src/ ./src/
 COPY main.cpp .
 
+# Mesmo build do ambiente local (Makefile), só trocando o compilador por ccache.
 RUN --mount=type=cache,target=/ccache,sharing=locked \
-    set -eu; \
-    mkdir -p build; \
-    for f in $(find src -name '*.cpp' | sort) main.cpp; do \
-        o="build/$(printf '%s' "$f" | tr '/' '_' | sed 's/\.cpp$/.o/')"; \
-        echo "CXX  $f"; \
-        ccache g++ ${CXXFLAGS} -c "$f" -o "$o"; \
-    done; \
-    echo "LD   app"; \
-    g++ ${LDFLAGS} build/*.o -o app; \
-    ccache --show-stats
+    make CXX="ccache g++" CXXFLAGS="${CXXFLAGS}" LDFLAGS="${LDFLAGS}" \
+ && ccache --show-stats
 
 
 # -----------------------------------------------------------------------------
@@ -84,6 +77,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update \
  && apt-get install -y --no-install-recommends gdb valgrind less
 
-ENV CXXFLAGS="-std=c++20 -O0 -g -Wall -Wextra -Iinclude"
+# Lido pelo Makefile: `make` dentro do contêiner gera um build de debug.
+ENV CXXFLAGS="-std=c++20 -O0 -g -Wall -Wextra"
 
 CMD ["bash"]
