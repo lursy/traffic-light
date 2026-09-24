@@ -5,9 +5,7 @@
 
 | Aluno | Matrícula |
 |---|---|
-| _Nome 1_ | _000000_ |
-| _Nome 2_ | _000000_ |
-| _Nome 3_ | _000000_ |
+| Matheus Felipe da Cruz Ferreira | 2026015610 |
 
 ---
 
@@ -15,7 +13,7 @@
 
 O programa simula um semáforo em uma via única. Os carros que chegam entram no fim de uma fila e, quando o sinal abre, o usuário diz quantos podem passar. Eles saem sempre pela frente da fila, então quem chegou primeiro passa primeiro (FIFO).
 
-Para isso implementamos uma **fila dinâmica encadeada** do zero, sem usar nada pronto da STL. Dividimos o código em algumas classes, cada uma com uma função:
+Para isso implementei uma **fila dinâmica encadeada** do zero, sem usar nada pronto da STL. Dividi o código em algumas classes, cada uma com uma função:
 
 | Classe | Arquivos | O que faz |
 |---|---|---|
@@ -27,10 +25,10 @@ Para isso implementamos uma **fila dinâmica encadeada** do zero, sem usar nada 
 
 O menu tem as opções pedidas no enunciado: registrar chegada, consultar o primeiro, abrir o sinal, listar a fila e mostrar a quantidade. Quando o usuário digita algo inválido (uma letra no lugar de um número, uma placa errada ou uma quantidade negativa), o programa avisa e volta para o menu, sem travar.
 
-Algumas decisões que tomamos:
+Algumas decisões que tomei:
 
 - **A fila guarda um ponteiro para o início e outro para o fim.** Assim, colocar um carro no fim não exige percorrer a fila inteira.
-- **A fila tem um contador de quantidade** que é atualizado a cada entrada e saída, então não precisamos contar os nós toda vez.
+- **A fila tem um contador de quantidade** que é atualizado a cada entrada e saída, então não é preciso contar os nós toda vez.
 - **A ordem de chegada é gerada pelo próprio sistema.** Um contador no `Semaforo` começa em 1 e só aumenta quando o carro realmente entra na fila.
 - **A fila guarda uma cópia do veículo.** Assim, nada que aconteça com o objeto original afeta o que está na fila.
 
@@ -53,13 +51,13 @@ Uma fila com três carros fica assim:
  [#1 ABC1234] → [#2 BRA2E19] → [#3 XYZ9876] → nullptr
 ```
 
-**Quando um carro chega (`enqueue`):** criamos um nó novo com `new`, ligamos o último nó a ele e ele passa a ser o `tail_`. Se a fila estava vazia, ele também vira o `head_`.
+**Quando um carro chega (`enqueue`):** o programa cria um nó novo com `new`, liga o último nó a ele e ele passa a ser o `tail_`. Se a fila estava vazia, ele também vira o `head_`.
 
 ```
  [#1] → [#2] → [#3] → [#4 novo] → nullptr
 ```
 
-**Quando o sinal abre (`dequeue`):** guardamos o primeiro nó, andamos o `head_` para o segundo e apagamos o primeiro com `delete`. Se era o último carro, o `tail_` também volta a ser `nullptr`.
+**Quando o sinal abre (`dequeue`):** o programa guarda o primeiro nó, avança o `head_` para o segundo e apaga o primeiro com `delete`. Se era o último carro, o `tail_` também volta a ser `nullptr`.
 
 ```
  [#2] → [#3] → [#4] → nullptr
@@ -69,16 +67,16 @@ Todo nó criado com `new` é apagado com `delete`, seja quando o carro sai da fi
 
 ## 3. Testes executados
 
-Fizemos os testes manualmente pelo menu, na sequência abaixo, começando com a fila vazia.
+Fiz os testes manualmente pelo menu, na sequência abaixo, começando com a fila vazia.
 
-| # | Teste | O que fizemos | Resultado esperado | Obtido |
+| # | Teste | O que fiz | Resultado esperado | Obtido |
 |---|---|---|---|---|
 | 1 | Abrir o sinal com a fila vazia | Opção 3 logo ao iniciar | "não há veículos para liberar" | ☐ |
-| 2 | Registrar vários veículos e conferir a ordem | Registramos `ABC1234`, `BRA2E19`, `XYZ9876`, `DEF5678` e usamos a opção 4 | Lista na ordem #1, #2, #3, #4 | ☐ |
+| 2 | Registrar vários veículos e conferir a ordem | Registrei `ABC1234`, `BRA2E19`, `XYZ9876`, `DEF5678` e usei a opção 4 | Lista na ordem #1, #2, #3, #4 | ☐ |
 | 3 | Consultar o primeiro sem alterar a fila | Opção 2 duas vezes, depois opção 5 | As duas vezes mostra `ABC1234`, e a quantidade continua 4 | ☐ |
 | 4 | Liberar menos veículos do que existem | Opção 3 com quantidade `2` | Saem #1 e #2, e sobram 2 na fila | ☐ |
 | 5 | Tentar liberar mais veículos do que existem | Opção 3 com quantidade `5` | Saem #3 e #4, e aparece o aviso de que não há mais veículos | ☐ |
-| 6 | Entradas inválidas | Opção `9`; placa `AB12345`; registramos um carro e abrimos o sinal com quantidade `-1` | Mensagem de erro em cada caso e volta ao menu | ☐ |
+| 6 | Entradas inválidas | Opção `9`; placa `AB12345`; registrei um carro e abri o sinal com quantidade `-1` | Mensagem de erro em cada caso e volta ao menu | ☐ |
 
 _(Colar aqui os prints ou a saída do terminal de cada teste.)_
 
@@ -86,7 +84,7 @@ _(Colar aqui os prints ou a saída do terminal de cada teste.)_
 
 Nas contas abaixo, **n** é o número de carros na fila e **k** é quantos carros o usuário pediu para passar.
 
-**Registrar chegada (`enqueue`).** A operação fundamental é criar o nó e ligar os ponteiros. Como temos o ponteiro `tail_`, vamos direto ao fim da fila. O código só tem um `if` (fila vazia ou não), sem nenhum laço, então o custo é o mesmo com 1 ou com 1000 carros: **O(1)** em todos os casos.
+**Registrar chegada (`enqueue`).** A operação fundamental é criar o nó e ligar os ponteiros. Como a fila tem o ponteiro `tail_`, o programa vai direto ao fim. O código só tem um `if` (fila vazia ou não), sem nenhum laço, então o custo é o mesmo com 1 ou com 1000 carros: **O(1)** em todos os casos.
 
 **Liberar um carro (`dequeue`) e consultar o primeiro (`front`).** As duas mexem só no primeiro nó, que o `head_` já aponta. Só há `if`s simples, sem laço: **O(1)** em todos os casos.
 
@@ -144,4 +142,4 @@ g++ -std=c++20 -Iinclude src/utils/queue.cpp src/vo/placa.cpp src/entities/veicu
 ./app
 ```
 
-Também deixamos o `Dockerfile` (entrega opcional): `docker compose run --rm app`.
+Também deixei o `Dockerfile` (entrega opcional): `docker compose run --rm app`.
