@@ -1,0 +1,52 @@
+# queue-traffic
+#
+#   docker compose run --rm app                  -> executa o binário final
+#   docker compose --profile dev run --rm dev    -> shell com gcc/gdb/valgrind
+#   docker compose build                         -> só builda
+
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+      args:
+        GCC_VERSION: "14"
+        DEBIAN_RELEASE: bookworm
+      cache_from:
+        - queue-traffic:latest
+    image: queue-traffic:latest
+    init: true
+    stdin_open: true   # o programa lê de stdin (std::cin)
+    tty: true
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      target: dev
+    image: queue-traffic:dev
+    init: true
+    stdin_open: true
+    tty: true
+    working_dir: /app
+    volumes:
+      - .:/app
+      - ccache:/ccache
+    # gdb/valgrind precisam desabilitar o seccomp de ptrace
+    security_opt:
+      - seccomp:unconfined
+    cap_add:
+      - SYS_PTRACE
+    command: bash
+
+volumes:
+  ccache:

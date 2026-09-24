@@ -1,0 +1,13 @@
+# Tudo é ignorado por padrão; só o necessário para o build é liberado abaixo.
+*
+
+!src/
+!include/
+!main.cpp
+
+# Garante que lixo de build local nunca entre no contexto
+**/*.o
+**/*.d
+**/*.gch
+**/application
+**/app
