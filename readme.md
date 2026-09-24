@@ -18,6 +18,7 @@ docker compose run --rm app   # via Docker
 
 ```
 include/utils/queue.h          fila dinâmica Queue<T> (lista encadeada)
+src/utils/queue.cpp            implementação da fila (instanciada para Veiculo)
 include/vo/placa.vo.h          placa validada (ABC1234 / ABC1D23)
 include/entities/veiculo.h     veículo: placa, tipo, ordem de chegada
 include/services/semaforo.h    regras do semáforo (única fila do programa)

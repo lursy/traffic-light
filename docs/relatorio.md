@@ -59,7 +59,7 @@ O código foi dividido em camadas. Cada camada tem uma única responsabilidade, 
 
 | Arquivo | Responsabilidade |
 |---|---|
-| `include/utils/queue.h` | Classe template `Queue<T>`: a fila dinâmica. Por ser template, a implementação inteira fica no header. |
+| `include/utils/queue.h`, `src/utils/queue.cpp` | Classe template `Queue<T>`: a fila dinâmica. A declaração fica no header e a implementação no `.cpp`, no mesmo padrão das outras classes. O `.cpp` instancia a fila explicitamente para `Veiculo` (`template class Queue<Veiculo>;`), o único tipo usado no programa. |
 | `include/vo/placa.vo.h`, `src/vo/placa.cpp` | Classe `Placa`: normaliza a entrada (remove hífen e espaços, converte para maiúsculas) e valida o formato. |
 | `include/entities/veiculo.h`, `src/entities/veiculo.cpp` | Classe `Veiculo` e enum `TipoVeiculo` (Moto, Carro, Caminhão, Ônibus). |
 | `include/services/semaforo.h`, `src/services/semaforo.cpp` | Classe `Semaforo`: contém **a única fila** do programa e o contador de ordem de chegada. |
@@ -210,7 +210,7 @@ make clean
 **Sem `make`:**
 
 ```bash
-g++ -std=c++20 -Wall -Wextra -Iinclude src/vo/placa.cpp src/entities/veiculo.cpp \
+g++ -std=c++20 -Wall -Wextra -Iinclude src/utils/queue.cpp src/vo/placa.cpp src/entities/veiculo.cpp \
     src/services/semaforo.cpp src/ui/menu.cpp main.cpp -o app
 ./app
 ```
@@ -375,7 +375,7 @@ Compile com `make debug`, registre alguns veículos, libere parte deles e saia p
 - **k**: quantidade de veículos que o usuário pede para liberar ao abrir o sinal.
 - **m**: quantidade de caracteres digitados para a placa.
 
-### 7.1 `enqueue` — registrar chegada (`include/utils/queue.h:96`)
+### 7.1 `enqueue` — registrar chegada (`src/utils/queue.cpp`)
 
 ```cpp
 void Queue<T>::enqueue(const T& obj){
@@ -400,13 +400,13 @@ No fluxo completo de registro (`Semaforo::registrarChegada`), a placa também é
 
 | Trecho | Estrutura | Complexidade |
 |---|---|---|
-| `Placa::normalize` (`src/vo/placa.cpp:15`) | `for` sobre os caracteres digitados, com `if` O(1) dentro | O(m) |
-| `Placa::isValid` (`src/vo/placa.cpp:27`) | `if` de tamanho + `for` de 3 iterações fixas + 4 testes | O(1) |
-| `Semaforo::registrarChegada` (`src/services/semaforo.cpp:3`) | sequência simples + `enqueue` | O(1) |
+| `Placa::normalize` (`src/vo/placa.cpp`) | `for` sobre os caracteres digitados, com `if` O(1) dentro | O(m) |
+| `Placa::isValid` (`src/vo/placa.cpp`) | `if` de tamanho + `for` de 3 iterações fixas + 4 testes | O(1) |
+| `Semaforo::registrarChegada` (`src/services/semaforo.cpp`) | sequência simples + `enqueue` | O(1) |
 
 **Registrar chegada: O(m) em relação à entrada e O(1) em relação ao tamanho da fila.** Como uma placa válida tem 7 caracteres, na prática o custo é constante.
 
-### 7.2 `dequeue` — liberar um veículo (`include/utils/queue.h:111`)
+### 7.2 `dequeue` — liberar um veículo (`src/utils/queue.cpp`)
 
 ```cpp
 T Queue<T>::dequeue(){
@@ -430,20 +430,20 @@ T Queue<T>::dequeue(){
 - **Estruturas de controle:** dois `if` O(1) e nenhuma repetição.
 - **Melhor, médio e pior caso:** O(1). O elemento removido é sempre o do início, que `head_` acessa diretamente.
 
-### 7.3 `front` / consultar primeiro (`include/utils/queue.h:132`)
+### 7.3 `front` / consultar primeiro (`src/utils/queue.cpp`)
 
 Um `if` (fila vazia?) e o retorno de `head_->value` por referência, sem cópia.
 **Melhor, médio e pior caso: O(1).**
 
-### 7.4 `size` / quantidade e `isEmpty` (`include/utils/queue.h:141-144`)
+### 7.4 `size` / quantidade e `isEmpty` (`src/utils/queue.cpp`)
 
 Leitura direta de `length_` e comparação `head_ == nullptr`.
 **Melhor, médio e pior caso: O(1).** Sem o contador `length_`, contar os veículos exigiria percorrer a fila, com custo O(n).
 
-### 7.5 Abrir o sinal (`include/services/semaforo.h:39`)
+### 7.5 Abrir o sinal (`src/services/semaforo.cpp`)
 
 ```cpp
-int Semaforo::abrirSinal(int quantidade, Callback aoLiberar){
+int Semaforo::abrirSinal(int quantidade, void (*aoLiberar)(const Veiculo&)){
     if(quantidade <= 0){                                       // condição: O(1)
         throw std::invalid_argument(...);
     }
@@ -466,10 +466,10 @@ int Semaforo::abrirSinal(int quantidade, Callback aoLiberar){
 
 **Observação (análise amortizada):** cada veículo entra na fila uma vez e sai no máximo uma vez. Por isso, em toda a execução do programa, a soma das iterações de todas as aberturas de sinal é no máximo o total de veículos registrados. Em média, cada veículo custa O(1) para ser liberado.
 
-### 7.6 Exibir veículos aguardando — `forEach` (`include/utils/queue.h:161`)
+### 7.6 Exibir veículos aguardando — `forEach` (`src/utils/queue.cpp`)
 
 ```cpp
-void Queue<T>::forEach(Visitor visit) const {
+void Queue<T>::forEach(void (*visit)(const T&, int)) const {
     int position = 1;
     for(Node* node = this->head_; node != nullptr; node = node->next){   // n iterações
         visit(node->value, position++);                                  //   impressão de 1 linha: O(1)
@@ -481,7 +481,7 @@ void Queue<T>::forEach(Visitor visit) const {
 - **Estruturas de controle:** um `for` que percorre a lista do início até `nullptr`, sempre n iterações, com corpo O(1).
 - **Melhor, médio e pior caso: Θ(n).** Para exibir todos os veículos é obrigatório visitar cada um, então não existe atalho. O único caso trivial é a fila vazia (n = 0), que o `Menu` trata em O(1).
 
-### 7.7 Liberar a fila inteira — `clear` / destrutor (`include/utils/queue.h:148`)
+### 7.7 Liberar a fila inteira — `clear` / destrutor (`src/utils/queue.cpp`)
 
 ```cpp
 void Queue<T>::clear(){
@@ -498,7 +498,7 @@ void Queue<T>::clear(){
 É executado automaticamente no encerramento, pelo destrutor da fila.
 **Melhor, médio e pior caso: Θ(n)**, porque cada nó precisa de um `delete`.
 
-### 7.8 Cópia da fila — construtor de cópia e `operator=` (`include/utils/queue.h:58` e `:78`)
+### 7.8 Cópia da fila — construtor de cópia e `operator=` (`src/utils/queue.cpp`)
 
 O construtor de cópia percorre a fila de origem com um `for` (n iterações) e faz um `enqueue` O(1) para cada nó: **Θ(n)**. O `operator=` faz essa cópia e depois libera a fila antiga com o destrutor da cópia temporária: **Θ(n + n_antiga)**. O programa do semáforo não copia filas; essas operações existem para a classe ficar correta (regra dos três).
 

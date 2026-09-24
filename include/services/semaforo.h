@@ -1,8 +1,6 @@
 #ifndef SEMAFORO_H
 #define SEMAFORO_H
 
-#include <stdexcept>
-
 #include "entities/veiculo.h"
 #include "utils/queue.h"
 
@@ -24,36 +22,13 @@ class Semaforo {
         // Chama aoLiberar(veiculo) para cada liberado e devolve quantos saíram
         // (menos que `quantidade` se a fila esvaziar antes).
         // Lança std::invalid_argument se quantidade <= 0.
-        template <typename Callback>
-        int abrirSinal(int quantidade, Callback aoLiberar);
+        int abrirSinal(int quantidade, void (*aoLiberar)(const Veiculo&));
 
         // Percorre os veículos aguardando: visit(veiculo, posicao).
-        template <typename Visitor>
-        void paraCadaAguardando(Visitor visit) const;
+        void paraCadaAguardando(void (*visit)(const Veiculo&, int)) const;
 
         int quantidade() const;
         bool vazio() const;
 };
-
-template <typename Callback>
-int Semaforo::abrirSinal(int quantidade, Callback aoLiberar){
-    if(quantidade <= 0){
-        throw std::invalid_argument("A quantidade deve ser maior que zero.");
-    }
-
-    int liberados = 0;
-
-    while(liberados < quantidade && !this->fila_.isEmpty()){
-        aoLiberar(this->fila_.dequeue());
-        liberados++;
-    }
-
-    return liberados;
-}
-
-template <typename Visitor>
-void Semaforo::paraCadaAguardando(Visitor visit) const {
-    this->fila_.forEach(visit);
-}
 
 #endif
