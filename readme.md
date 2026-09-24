@@ -14,6 +14,56 @@ make debug && ./app           # versão com AddressSanitizer (verifica vazamento
 docker compose run --rm app   # via Docker
 ```
 
+## Funcionalidades
+
+| Opção | O que faz |
+|---|---|
+| 1 | Registra a chegada de um veículo (placa + tipo) no fim da fila; a ordem de chegada é gerada pelo sistema |
+| 2 | Mostra o primeiro da fila sem removê-lo |
+| 3 | Abre o sinal: pergunta quantos veículos passam e libera na ordem de chegada |
+| 4 | Lista todos os veículos aguardando |
+| 5 | Mostra a quantidade de veículos na fila |
+| 0 | Encerra o programa |
+
+Entradas inválidas (opção inexistente, placa fora do formato, quantidade ≤ 0) e
+operações sobre a fila vazia mostram uma mensagem e voltam ao menu.
+
+## Como a fila funciona
+
+Cada veículo fica em um nó alocado com `new`, que aponta para o próximo. A fila
+guarda o primeiro nó (`head_`), o último (`tail_`) e a quantidade (`length_`).
+
+```
+ head_                               tail_
+   ↓                                   ↓
+ [#1 ABC1234] → [#2 BRA2E19] → [#3 XYZ9876] → nullptr
+```
+
+- **Entrada (`enqueue`)**: o novo nó é ligado depois do `tail_` e vira o novo `tail_`.
+- **Saída (`dequeue`)**: o `head_` avança para o segundo nó e o primeiro é apagado com `delete`.
+- **Fim do programa**: o destrutor apaga os nós que sobraram.
+
+## Principais decisões
+
+- **Lista encadeada com `head_` e `tail_`.** O enunciado pede fila dinâmica, sem
+  capacidade fixa. Em um array o fim pode ser calculado por `início + tamanho`,
+  mas numa lista os nós ficam espalhados na memória; sem o `tail_`, achar o fim
+  exigiria percorrer a fila inteira (O(n) por chegada). Com ele, é O(1).
+- **Contador `length_`.** Atualizado em cada entrada e saída, então a quantidade
+  é O(1) em vez de contar os nós.
+- **A fila guarda cópias.** `enqueue` copia o veículo para dentro do nó. Assim,
+  apagar o objeto original não deixa um ponteiro inválido dentro da fila.
+- **Regra dos três.** Como a `Queue` gerencia memória, ela define destrutor,
+  construtor de cópia e `operator=` (cópia profunda), evitando vazamentos e
+  `delete` duplicado.
+- **Padrão `include/` + `src/`.** A `Queue` é um template, mas a implementação
+  fica em `src/utils/queue.cpp` com instanciação explícita para `Veiculo`,
+  no mesmo padrão das outras classes.
+- **Validação na `Placa`.** O construtor normaliza (`abc-1234` → `ABC1234`) e
+  rejeita formatos inválidos, então toda placa que existe no programa é válida.
+- **Camadas separadas.** `Menu` só faz entrada/saída, `Semaforo` tem as regras
+  (ordem de chegada, abrir sinal) e `Queue` é só a estrutura de dados.
+
 ## Estrutura
 
 ```
