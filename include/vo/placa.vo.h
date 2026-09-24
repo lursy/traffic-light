@@ -3,11 +3,6 @@
 
 #include <string>
 
-// Value object: placa de veículo no padrão brasileiro.
-//   - antigo:   ABC1234  (também aceito como ABC-1234)
-//   - Mercosul: ABC1D23
-// A entrada é normalizada (sem hífen/espaços, em maiúsculas) e validada no
-// construtor, então todo objeto Placa existente é sempre uma placa válida.
 class Placa {
     private:
         std::string code_;
@@ -18,7 +13,6 @@ class Placa {
     public:
         static constexpr int LENGTH = 7;
 
-        // Lança std::invalid_argument se a placa não estiver em um dos formatos.
         explicit Placa(const std::string& code);
 
         const std::string& getCode() const;

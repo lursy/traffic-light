@@ -4,8 +4,10 @@
 
 #include "ui/menu.h"
 
+// O(1)
 Menu::Menu(Semaforo& semaforo) : semaforo_(semaforo) {}
 
+// O(m + n)
 void Menu::executar(){
     std::string linha;
 
@@ -45,6 +47,7 @@ void Menu::executar(){
     std::cout << "\nFim da entrada. Encerrando.\n";
 }
 
+// O(m)
 void Menu::registrarChegada(){
     std::string linha;
 
@@ -72,6 +75,7 @@ void Menu::registrarChegada(){
     }
 }
 
+// O(1)
 void Menu::consultarPrimeiro(){
     if(this->semaforo_.vazio()){
         std::cout << "A fila está vazia: não há veículo para consultar.\n";
@@ -82,6 +86,7 @@ void Menu::consultarPrimeiro(){
     imprimirVeiculo(this->semaforo_.primeiro());
 }
 
+// O(m + min(k, n))
 void Menu::abrirSinal(){
     if(this->semaforo_.vazio()){
         std::cout << "Sinal aberto, mas não há veículos para liberar.\n";
@@ -113,6 +118,7 @@ void Menu::abrirSinal(){
               << " veículo(s) aguardando.\n";
 }
 
+// O(n)
 void Menu::exibirAguardando(){
     if(this->semaforo_.vazio()){
         std::cout << "Não há veículos aguardando.\n";
@@ -132,10 +138,12 @@ void Menu::exibirAguardando(){
     });
 }
 
+// O(1)
 void Menu::exibirQuantidade(){
     std::cout << "Veículos na fila: " << this->semaforo_.quantidade() << "\n";
 }
 
+// O(m)
 bool Menu::lerLinha(const std::string& prompt, std::string& linha){
     std::cout << prompt;
 
@@ -146,6 +154,7 @@ bool Menu::lerLinha(const std::string& prompt, std::string& linha){
     return true;
 }
 
+// O(m)
 bool Menu::paraInteiro(const std::string& texto, int& valor){
     std::size_t inicio = texto.find_first_not_of(" \t\r");
     std::size_t fim = texto.find_last_not_of(" \t\r");
@@ -156,12 +165,13 @@ bool Menu::paraInteiro(const std::string& texto, int& valor){
     try {
         std::size_t lidos;
         valor = std::stoi(numero, &lidos);
-        return lidos == numero.size();      // rejeita "3abc"
-    } catch(const std::exception&) {        // não numérico ou fora do alcance de int
+        return lidos == numero.size();
+    } catch(const std::exception&) {
         return false;
     }
 }
 
+// O(1)
 void Menu::imprimirVeiculo(const Veiculo& veiculo){
     std::cout << "#" << veiculo.getOrdemChegada() << " "
               << veiculo.getPlaca().getCode() << " ("

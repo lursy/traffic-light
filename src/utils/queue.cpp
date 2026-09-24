@@ -3,7 +3,7 @@
 
 #include "utils/queue.h"
 
-// Cópia profunda: cada nó de `other` é copiado para um nó novo, na mesma ordem.
+// O(n)
 template <typename T>
 Queue<T>::Queue(const Queue<T>& other){
     try {
@@ -11,19 +11,18 @@ Queue<T>::Queue(const Queue<T>& other){
             this->enqueue(node->value);
         }
     } catch(...) {
-        // o destrutor não roda se o construtor falha: libera o que já foi copiado
         this->clear();
         throw;
     }
 }
 
+// O(n)
 template <typename T>
 Queue<T>::~Queue(){
     this->clear();
 }
 
-// copy-and-swap: a cópia temporária fica com os dados antigos e os libera
-// ao sair de escopo. Se a cópia falhar, esta fila continua intacta.
+// O(n)
 template <typename T>
 Queue<T>& Queue<T>::operator=(const Queue<T>& other){
     if(this != &other){
@@ -34,6 +33,7 @@ Queue<T>& Queue<T>::operator=(const Queue<T>& other){
     return *this;
 }
 
+// O(1)
 template <typename T>
 void Queue<T>::swap(Queue<T>& other){
     std::swap(this->head_, other.head_);
@@ -41,13 +41,13 @@ void Queue<T>::swap(Queue<T>& other){
     std::swap(this->length_, other.length_);
 }
 
-// Insere no fim da fila. O(1): o ponteiro tail_ evita percorrer a lista.
+// O(1)
 template <typename T>
 void Queue<T>::enqueue(const T& obj){
     Node* node = new Node(obj);
 
     if(this->tail_ == nullptr){
-        this->head_ = node;         // fila vazia: o novo nó é também o primeiro
+        this->head_ = node;
     } else {
         this->tail_->next = node;
     }
@@ -56,7 +56,7 @@ void Queue<T>::enqueue(const T& obj){
     this->length_++;
 }
 
-// Remove e devolve o elemento do início da fila. O(1).
+// O(1)
 template <typename T>
 T Queue<T>::dequeue(){
     if(this->head_ == nullptr){
@@ -68,7 +68,7 @@ T Queue<T>::dequeue(){
 
     this->head_ = node->next;
     if(this->head_ == nullptr){
-        this->tail_ = nullptr;      // era o último: a fila ficou vazia
+        this->tail_ = nullptr;
     }
 
     delete node;
@@ -77,7 +77,7 @@ T Queue<T>::dequeue(){
     return value;
 }
 
-// Consulta o elemento do início sem removê-lo. O(1).
+// O(1)
 template <typename T>
 const T& Queue<T>::front() const {
     if(this->head_ == nullptr){
@@ -87,13 +87,15 @@ const T& Queue<T>::front() const {
     return this->head_->value;
 }
 
+// O(1)
 template <typename T>
 bool Queue<T>::isEmpty() const { return this->head_ == nullptr; }
 
+// O(1)
 template <typename T>
 int Queue<T>::size() const { return this->length_; }
 
-// Libera todos os nós. O(n).
+// O(n)
 template <typename T>
 void Queue<T>::clear(){
     while(this->head_ != nullptr){
@@ -106,6 +108,7 @@ void Queue<T>::clear(){
     this->length_ = 0;
 }
 
+// O(n)
 template <typename T>
 void Queue<T>::forEach(void (*visit)(const T&, int)) const {
     int position = 1;

@@ -3,12 +3,14 @@
 
 #include "vo/placa.vo.h"
 
+// O(m)
 Placa::Placa(const std::string& code) : code_(normalize(code)) {
     if(!isValid(this->code_)){
         throw std::invalid_argument("Placa inválida: use o formato ABC1234 ou ABC1D23.");
     }
 }
 
+// O(m)
 std::string Placa::normalize(const std::string& code){
     std::string normalized;
 
@@ -20,7 +22,7 @@ std::string Placa::normalize(const std::string& code){
     return normalized;
 }
 
-// Posições: 0-2 letras, 3 dígito, 4 letra (Mercosul) ou dígito (antigo), 5-6 dígitos.
+// O(1)
 bool Placa::isValid(const std::string& code){
     if((int) code.size() != LENGTH) return false;
 
@@ -34,4 +36,5 @@ bool Placa::isValid(const std::string& code){
         && std::isdigit((unsigned char) code[6]);
 }
 
+// O(1)
 const std::string& Placa::getCode() const { return this->code_; }
